@@ -61,6 +61,7 @@ jobs:
       - if: always() && matrix.tool == 'quality-ts' && matrix.repo != 'quality-ts'
         run: |
           jq -r '.modules[]? | select(.status == "error") | "\(input_filename | split("/")[-1]): \(.package // ".") \(.id): \(.reason)"' "$RESULTS"/out/*.json 2>/dev/null | sort -u | cut -c1-2000 || true
+          for log in "$RESULTS"/logs/quality-ts-*crap*.log; do echo "== $log"; tail -n 5 "$log" | cut -c1-500; done 2>/dev/null || true
       - if: always() && matrix.repo == 'quality-ts'
         run: |
           sed 's/\x1b\[[0-9;]*m//g' "$RESULTS"/logs/*crap*.log 2>/dev/null | grep -aE '^ *FAIL ' | sed -E 's/ *\[.*//' | sort -u | head -60 || true
