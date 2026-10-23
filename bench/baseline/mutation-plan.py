@@ -5,7 +5,8 @@ macOS/Linux ratio. Shard counts keep each job under the 6 h runner limit, from
 the fallow mutant counts and the Stryker spike (qualbar#17: about 41 h for the
 quality-ts repo at concurrency 1).
 quality-ts refuses date-fns (TypeScript 7, Vitest 5); fallow mutation is
-Vitest-only, so it skips ts-pattern (Jest).
+Vitest-only, so it skips ts-pattern (Jest), and fallow 3.35.0 cannot load
+zod's Vitest workspace (file-based projects, also from packages/zod).
 
 Usage: mutation-plan.py [smoke]
 """
@@ -15,7 +16,7 @@ import sys
 
 SHARDS = {
     "quality-ts": {"quality-ts": 8, "zustand": 1, "ts-pattern": 1, "zod": 24},
-    "fallow": {"quality-ts": 8, "zustand": 1, "zod": 24, "date-fns": 16},
+    "fallow": {"quality-ts": 8, "zustand": 1, "date-fns": 16},
 }
 
 

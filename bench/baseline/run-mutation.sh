@@ -21,6 +21,9 @@ labels=(--label "repo=$REPO" --label "sha=$(field sha)" --label "tool=$TOOL"
 if [ "$TOOL" = quality-ts ]; then
   cmd="$QTS check --only mutation --shard $SHARD/$SHARDS --shard-file qualbar-shard.json --format json > $RESULTS/out/qts.json"
 else
+  # fallow cannot load Vitest projects from separate config files, so a
+  # workspace runs from its main package (see corpus.json).
+  cd "$TARGET/$(field fallow_mutation_root)"
   "$FALLOW" mutation --plan --all --no-cache --format json > "$RESULTS/out/plan.json"
   python3 "$HERE/shard.py" "$RESULTS/out/plan.json" "$SHARD" "$SHARDS" > "$RESULTS/out/files.txt"
   labels+=(--label "planned_files=$(wc -l < "$RESULTS/out/files.txt" | tr -d ' ')")
