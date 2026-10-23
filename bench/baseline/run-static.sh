@@ -47,6 +47,15 @@ else
   done
 fi
 
+# aborted <mode>: true when a quality-ts run of <mode>/all aborted (exit 134,
+# the V8 heap limit, seen on the 7 GB macOS runner). Then one more run with a
+# 6 GB heap measures what the run needs.
+aborted() { jq -e --arg m "$1" 'select(.mode == $m and .category == "all" and .exit_code == 134)' "$RESULTS/results.jsonl" > /dev/null; }
+BIG_HEAP="NODE_OPTIONS=--max-old-space-size=6144"
+if [ "$TOOL" = quality-ts ] && aborted full; then
+  m full-big-heap all 1 "$BIG_HEAP $QTS check --only $STATIC --format json > $(out full-big-heap all 1)"
+fi
+
 # The small diff: one new exported function in one source file.
 cat >> "$(field edit_file)" <<'EOF'
 
@@ -64,6 +73,9 @@ if [ "$TOOL" = quality-ts ]; then
     m changed all "$run" "$QTS check --changed HEAD~1 --only $STATIC --format json > $(out changed all "$run")"
   done
   m changed crap 1 "$QTS check --changed HEAD~1 --only crap --format json > $(out changed crap 1)"
+  if aborted changed; then
+    m changed-big-heap all 1 "$BIG_HEAP $QTS check --changed HEAD~1 --only $STATIC --format json > $(out changed-big-heap all 1)"
+  fi
 else
   for run in $(seq $RUNS); do
     m changed all "$run" "$FALLOW audit --base HEAD~1 --no-cache --format json > $(out changed all "$run")"
