@@ -63,7 +63,7 @@
     "pnpm": "11.22.0",
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
-    "coverage_setup": "npx -y playwright@$(node -p \"const r=require.resolve; require(r('playwright/package.json',{paths:[r('@vitest/browser-playwright/package.json',{paths:['pkgs/core']})]})).version\") install --with-deps chromium",
+    "coverage_setup": "node \"$(ls -d node_modules/.pnpm/playwright@*/node_modules/playwright | head -1)/cli.js\" install --with-deps chromium",
     "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
