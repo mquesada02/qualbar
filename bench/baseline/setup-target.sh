@@ -25,6 +25,8 @@ git -C "$TARGET" checkout -q FETCH_HEAD
 echo "TARGET=$TARGET" >> "$GITHUB_ENV"
 
 cd "$TARGET"
+# Bench-only fixes to the target, the same for both tools (see corpus.json).
+eval "$(field prepare)"
 eval "$(field install)"
 eval "$(field coverage_setup)"
 

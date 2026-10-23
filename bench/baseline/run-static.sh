@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Measures one tool on one prepared target: the full static check (3 runs),
-# each category alone (3 runs), the CRAP run (1 run), then a changed-only
-# check on a one-file commit (3 runs).
+# each category alone (3 runs), a changed-only check on a one-file commit
+# (3 runs), then the CRAP run (1 run). CRAP runs last because a coverage
+# command can build files (zod) that the other runs must not see.
 # Usage: run-static.sh <repo> quality-ts|fallow <results-dir>
 # Only results.jsonl leaves the runner: logs/ and out/ can hold private
 # quality-ts content, and artifacts of a public repo are public.
@@ -35,7 +36,6 @@ if [ "$TOOL" = quality-ts ]; then
       m full "$cat" "$run" "$QTS check --only $cat --format json > $(out full "$cat" "$run")"
     done
   done
-  m crap crap 1 "$QTS check --only crap --format json > $(out crap crap 1)"
 else
   for run in $(seq $RUNS); do
     m full all "$run" "$FALLOW --no-cache --format json > $(out full all "$run")"
@@ -45,13 +45,7 @@ else
       m full "$cat" "$run" "$FALLOW $cat --no-cache --format json > $(out full "$cat" "$run")"
     done
   done
-  # fallow does not run tests for CRAP: it reads an Istanbul file. Measure the
-  # test run and the analysis apart; their sum is the CRAP run.
-  m crap tests 1 "$(field coverage)"
-  m crap health 1 "$FALLOW health --coverage $(field istanbul) --no-cache --format json > $(out crap health 1)"
 fi
-git clean -fdq -e node_modules
-git checkout -q -- .
 
 # The small diff: one new exported function in one source file.
 cat >> "$(field edit_file)" <<'EOF'
@@ -74,4 +68,15 @@ else
   for run in $(seq $RUNS); do
     m changed all "$run" "$FALLOW audit --base HEAD~1 --no-cache --format json > $(out changed all "$run")"
   done
+fi
+
+# CRAP at the bench-setup commit, not on the edit.
+git checkout -q HEAD~1
+if [ "$TOOL" = quality-ts ]; then
+  m crap crap 1 "$QTS check --only crap --format json > $(out crap crap 1)"
+else
+  # fallow does not run tests for CRAP: it reads an Istanbul file. Measure the
+  # test run and the analysis apart; their sum is the CRAP run.
+  m crap tests 1 "$(field coverage)"
+  m crap health 1 "$FALLOW health --coverage $(field istanbul) --no-cache --format json > $(out crap health 1)"
 fi

@@ -49,10 +49,11 @@
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
     "coverage_setup": "pnpm add -D -w @vitest/coverage-v8@$(node -p \"require('vitest/package.json').version\")",
-    "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage": "pnpm build && pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
-    "edit_file": "packages/zod/src/v4/core/util.ts"
+    "edit_file": "packages/zod/src/v4/core/util.ts",
+    "prepare": "printf '%s\\n' '{\"extends\": \"../../tsconfig.json\", \"include\": [\"*.ts\"]}' > packages/treeshake/tsconfig.json"
   },
   "date-fns": {
     "repo": "date-fns/date-fns",
@@ -62,8 +63,8 @@
     "pnpm": "11.22.0",
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
-    "coverage_setup": "true",
-    "coverage": "pnpm exec vitest run --project '!*browser*' --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage_setup": "npx -y playwright@$(node -p \"const r=require.resolve; require(r('playwright/package.json',{paths:[r('@vitest/browser-playwright/package.json',{paths:['pkgs/core']})]})).version\") install --with-deps chromium",
+    "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
     "edit_file": "pkgs/core/src/addDays/index.ts"
