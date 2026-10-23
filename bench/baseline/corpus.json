@@ -8,11 +8,12 @@
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
     "coverage_setup": "pnpm add -D @vitest/coverage-v8@$(node -p \"require('vitest/package.json').version\")",
-    "coverage": "pnpm exec vitest run --exclude test/adapters/readline-prompter.test.ts --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
     "edit_file": "src/domain/compare.ts",
-    "coverage_note": "test/adapters/readline-prompter.test.ts is excluded: its 2 tests fail on CI runners (stdin), and a failed run writes no coverage."
+    "prepare": "rm test/adapters/readline-prompter.test.ts",
+    "prepare_note": "Its 2 tests read stdin and fail on CI runners; a failed test run writes no coverage and fails the mutation dry run."
   },
   "zustand": {
     "repo": "pmndrs/zustand",
@@ -54,7 +55,8 @@
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
     "edit_file": "packages/zod/src/v4/core/util.ts",
-    "prepare": "printf '%s\\n' '{\"extends\": \"../../tsconfig.json\", \"include\": [\"*.ts\"]}' > packages/treeshake/tsconfig.json"
+    "prepare": "printf '%s\\n' '{\"extends\": \"../../tsconfig.json\", \"include\": [\"*.ts\"]}' > packages/treeshake/tsconfig.json",
+    "mutation_setup": "pnpm -w run build"
   },
   "date-fns": {
     "repo": "date-fns/date-fns",
@@ -68,6 +70,7 @@
     "coverage": "pnpm exec vitest run --passWithNoTests --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
-    "edit_file": "pkgs/core/src/addDays/index.ts"
+    "edit_file": "pkgs/core/src/addDays/index.ts",
+    "fallow_mutation_root": "pkgs/core"
   }
 }

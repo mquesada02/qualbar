@@ -29,6 +29,9 @@ cd "$TARGET"
 eval "$(field prepare)"
 eval "$(field install)"
 eval "$(field coverage_setup)"
+if [ "$PURPOSE" = mutation ]; then
+  eval "$(field mutation_setup)"
+fi
 
 if [ "$TOOL" = quality-ts ]; then
   # quality-ts init without a terminal needs every open point as a flag.
