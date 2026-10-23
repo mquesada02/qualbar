@@ -8,10 +8,11 @@
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
     "coverage_setup": "pnpm add -D @vitest/coverage-v8@$(node -p \"require('vitest/package.json').version\")",
-    "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage": "pnpm exec vitest run --exclude test/adapters/readline-prompter.test.ts --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
-    "edit_file": "src/domain/compare.ts"
+    "edit_file": "src/domain/compare.ts",
+    "coverage_note": "test/adapters/readline-prompter.test.ts is excluded: its 2 tests fail on CI runners (stdin), and a failed run writes no coverage."
   },
   "zustand": {
     "repo": "pmndrs/zustand",
@@ -49,7 +50,7 @@
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
     "coverage_setup": "pnpm add -D -w @vitest/coverage-v8@$(node -p \"require('vitest/package.json').version\")",
-    "coverage": "pnpm build && pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage": "pnpm -w run build && pnpm exec vitest run --passWithNoTests --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
     "edit_file": "packages/zod/src/v4/core/util.ts",
@@ -64,7 +65,7 @@
     "runner": "vitest",
     "install": "pnpm install --frozen-lockfile",
     "coverage_setup": "node \"$(ls -d node_modules/.pnpm/playwright@*/node_modules/playwright | head -1)/cli.js\" install --with-deps chromium",
-    "coverage": "pnpm exec vitest run --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
+    "coverage": "pnpm exec vitest run --passWithNoTests --coverage.enabled --coverage.reporter=lcov --coverage.reporter=json --coverage.reportsDirectory=coverage",
     "lcov": "coverage/lcov.info",
     "istanbul": "coverage/coverage-final.json",
     "edit_file": "pkgs/core/src/addDays/index.ts"
