@@ -57,6 +57,15 @@ The output of one `check` run: the status, the result per category, the findings
 **Partial report**:
 A report from a run limited by `--only`, `--package`, `--changed` or `--shard`. A partial report never updates the ratchet.
 
+**Full report**:
+A report that covers every enabled category, every package and every file: from one unlimited `check` run, or from `merge` of all shards with the same stamp. Only a full report may update the ratchet.
+
+**Shard**:
+One of n parts of a full run (`--shard k/n`). Each shard gives a partial report; `merge` joins all n into a full report.
+
+**Stamp**:
+The part of a report that names what it measured: the commit, a hash of the config, the qualbar version and whether the working tree was dirty. `merge` and `ratchet --from` refuse reports whose stamps do not match.
+
 **Changed-only mode**:
 A run limited to changed files and their dependents, which runs only the affected tests. The agent's fast loop. It gives a partial report.
 
@@ -68,7 +77,8 @@ A stable id for a finding that links the same finding across runs and line moves
 - A **Category** has one or more **Rules**; a **Rule** belongs to exactly one **Category** and has zero or more **Principles**.
 - The **Gate** turns **Measurements** into **Findings**; each **Finding** has one **Fingerprint**.
 - A **Package** contains **Modules**; a **Component** groups **Modules** by path; a **Module** contains **Units**.
-- The **Ratchet** stores one set of **Aggregates** per **Package**; only a full (non-partial) **Report** may update it.
+- The **Ratchet** stores one set of **Aggregates** per **Package**; only a **Full report** may update it.
+- Each **Report** has one **Stamp**; n **Shards** with the same **Stamp** merge into one **Full report**.
 
 ## Flagged ambiguities
 
