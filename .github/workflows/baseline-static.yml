@@ -1,0 +1,62 @@
+# Baseline timings of quality-ts and fallow: static, changed-only and CRAP runs.
+# Ticket: "Task: baseline timings of quality-ts and fallow" (qualbar#23).
+#
+# quality-ts is private and this repo is public, so its logs and artifacts are
+# public. Steps that touch quality-ts code send their output to /dev/null, and
+# only numbers (results.jsonl, machine.txt) are uploaded.
+name: baseline-static
+
+on:
+  push:
+    branches: [research/baseline-timings]
+    paths: [bench/baseline/**, .github/workflows/baseline-static.yml]
+
+permissions:
+  contents: read
+
+jobs:
+  static:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15]
+        repo: [quality-ts, zustand, ts-pattern, zod, date-fns]
+        tool: [quality-ts, fallow]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 300
+    env:
+      QUALITY_TS_TOKEN: ${{ secrets.QUALITY_TS_TOKEN }}
+      RESULTS: ${{ github.workspace }}/results
+    steps:
+      - uses: actions/checkout@v4
+      - id: corpus
+        run: |
+          echo "node=$(jq -r '.["${{ matrix.repo }}"].node' bench/baseline/corpus.json)" >> "$GITHUB_OUTPUT"
+          echo "pnpm=$(jq -r '.["${{ matrix.repo }}"].pnpm // "11.22.0"' bench/baseline/corpus.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.corpus.outputs.node }}
+      - run: npm install -g pnpm@${{ steps.corpus.outputs.pnpm }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install psutil==7.0.0
+      - name: Set up tool (output hidden)
+        run: bash bench/baseline/setup-tools.sh ${{ matrix.tool }} > /dev/null 2>&1
+      - name: Set up target (output hidden)
+        run: bash bench/baseline/setup-target.sh ${{ matrix.repo }} ${{ matrix.tool }} static > /dev/null 2>&1
+      - name: Measure (output hidden)
+        run: bash bench/baseline/run-static.sh ${{ matrix.repo }} ${{ matrix.tool }} "$RESULTS" > /dev/null 2>&1
+      - if: always()
+        run: |
+          mkdir -p "$RESULTS"
+          { echo "runner_image=${ImageOS:-}-${ImageVersion:-}"; uname -a; node --version; pnpm --version; } > "$RESULTS/machine.txt"
+          cat "$RESULTS/results.jsonl" 2>/dev/null | jq -c '{mode, category, run, exit_code, wall_s, peak_tree_rss_mb}' || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-${{ matrix.os }}-${{ matrix.repo }}-${{ matrix.tool }}
+          path: |
+            results/results.jsonl
+            results/machine.txt
+          if-no-files-found: warn
