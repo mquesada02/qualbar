@@ -30,6 +30,6 @@ python3 "$HERE/measure.py" --out "$RESULTS/results.jsonl" --log "$RESULTS/logs/$
 
 # Mutant counts are numbers only, so they may leave the runner.
 if [ "$TOOL" = fallow ] && [ -f "$RESULTS/out/fallow.json" ]; then
-  jq -c --arg r "$REPO" --arg s "$SHARD/$SHARDS" '{repo: $r, tool: "fallow", shard: $s, counts}' \
+  jq -c --arg r "$REPO" --arg s "$SHARD/$SHARDS" '{repo: $r, tool: "fallow", shard: $s, counts: .summary.counts, score: .summary.score}' \
     "$RESULTS/out/fallow.json" >> "$RESULTS/counts.jsonl" || true
 fi

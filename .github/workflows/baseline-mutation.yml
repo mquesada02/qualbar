@@ -13,7 +13,7 @@ permissions:
 
 env:
   # "smoke" runs zustand only; empty runs the full plan.
-  PLAN: smoke
+  PLAN: ""
 
 jobs:
   plan:
