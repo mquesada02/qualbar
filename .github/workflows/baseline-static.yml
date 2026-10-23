@@ -59,9 +59,11 @@ jobs:
       # Approved by the user: quality-ts error reasons for public targets, and
       # the names of failing tests in the quality-ts repo. No code, no traces.
       - if: always() && matrix.tool == 'quality-ts' && matrix.repo != 'quality-ts'
-        run: jq -r '.modules[]? | select(.status == "error") | "\(input_filename | split("/")[-1]): \(.package // ".") \(.id): \(.reason)"' "$RESULTS"/out/*.json 2>/dev/null | sort -u | cut -c1-2000 || true
+        run: |
+          jq -r '.modules[]? | select(.status == "error") | "\(input_filename | split("/")[-1]): \(.package // ".") \(.id): \(.reason)"' "$RESULTS"/out/*.json 2>/dev/null | sort -u | cut -c1-2000 || true
       - if: always() && matrix.repo == 'quality-ts'
-        run: sed 's/\x1b\[[0-9;]*m//g' "$RESULTS"/logs/*crap*.log 2>/dev/null | grep -aE '^ *FAIL ' | sed -E 's/ *\[.*//' | sort -u | head -60 || true
+        run: |
+          sed 's/\x1b\[[0-9;]*m//g' "$RESULTS"/logs/*crap*.log 2>/dev/null | grep -aE '^ *FAIL ' | sed -E 's/ *\[.*//' | sort -u | head -60 || true
       - if: always()
         run: |
           mkdir -p "$RESULTS"
