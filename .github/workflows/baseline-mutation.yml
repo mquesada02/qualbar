@@ -1,0 +1,78 @@
+# Baseline timings of quality-ts and fallow: mutation runs, sharded.
+# Ticket: "Task: baseline timings of quality-ts and fallow" (qualbar#23).
+# Same privacy rule as baseline-static.yml: only numbers are uploaded.
+name: baseline-mutation
+
+on:
+  push:
+    branches: [research/baseline-timings]
+    paths: [bench/baseline/mutation-plan.py, .github/workflows/baseline-mutation.yml]
+
+permissions:
+  contents: read
+
+env:
+  # "smoke" runs zustand only; empty runs the full plan.
+  PLAN: smoke
+
+jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: plan
+        run: echo "matrix=$(python3 bench/baseline/mutation-plan.py $PLAN)" >> "$GITHUB_OUTPUT"
+
+  mutation:
+    needs: plan
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 358
+    env:
+      QUALITY_TS_TOKEN: ${{ secrets.QUALITY_TS_TOKEN }}
+      RESULTS: ${{ github.workspace }}/results
+    steps:
+      - uses: actions/checkout@v4
+      - id: corpus
+        run: |
+          echo "node=$(jq -r '.["${{ matrix.repo }}"].node' bench/baseline/corpus.json)" >> "$GITHUB_OUTPUT"
+          echo "pnpm=$(jq -r '.["${{ matrix.repo }}"].pnpm // "11.22.0"' bench/baseline/corpus.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ steps.corpus.outputs.node }}
+      - run: npm install -g pnpm@${{ steps.corpus.outputs.pnpm }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install psutil==7.0.0
+      - name: Set up tool (output in a file)
+        run: mkdir -p "$RESULTS/logs" && bash bench/baseline/setup-tools.sh ${{ matrix.tool }} > "$RESULTS/logs/setup-tools.log" 2>&1
+      - name: Set up target (output in a file)
+        run: bash bench/baseline/setup-target.sh ${{ matrix.repo }} ${{ matrix.tool }} mutation > "$RESULTS/logs/setup-target.log" 2>&1
+      - name: Measure (output in a file)
+        run: bash bench/baseline/run-mutation.sh ${{ matrix.repo }} ${{ matrix.tool }} ${{ matrix.shard }} ${{ matrix.shards }} "$RESULTS" > "$RESULTS/logs/run.log" 2>&1
+      - if: always()
+        run: |
+          mkdir -p "$RESULTS"
+          { echo "runner_image=${ImageOS:-}-${ImageVersion:-}"; uname -a; node --version; pnpm --version; } > "$RESULTS/machine.txt"
+          cat "$RESULTS/results.jsonl" "$RESULTS/counts.jsonl" 2>/dev/null || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-${{ matrix.os }}-${{ matrix.repo }}-${{ matrix.tool }}-${{ matrix.shard }}
+          path: |
+            results/results.jsonl
+            results/counts.jsonl
+            results/machine.txt
+          if-no-files-found: warn
+      - if: always() && matrix.tool == 'fallow' && matrix.repo != 'quality-ts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.os }}-${{ matrix.repo }}-${{ matrix.tool }}-${{ matrix.shard }}
+          path: |
+            results/logs
+            results/out
