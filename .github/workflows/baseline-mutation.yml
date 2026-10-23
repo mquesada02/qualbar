@@ -13,7 +13,7 @@ permissions:
 
 env:
   # [TOOL/]REPO runs only those jobs ("smoke" = zustand); empty runs the full plan.
-  PLAN: fallow/quality-ts
+  PLAN: quality-ts/quality-ts
 
 jobs:
   plan:
@@ -64,6 +64,8 @@ jobs:
       - if: always() && matrix.repo == 'quality-ts'
         run: |
           jq -r '.modules[]? | select(.status == "error") | "\(.package // ".") \(.id): \(.reason | split("\n")[0])"' "$RESULTS"/out/qts.json 2>/dev/null | cut -c1-300 || true
+          # Approved: failing test names only (each line cut at the first ": ").
+          jq -r '.modules[]? | select(.status == "error") | .reason | split("\n")[1:40][] | split(": ")[0] | .[0:150]' "$RESULTS"/out/qts.json 2>/dev/null || true
           grep -ah '^{"error"' "$RESULTS"/logs/fallow-mutation.log 2>/dev/null | jq -r .message | head -n 1 | cut -c1-300 || true
       - if: always()
         run: |
