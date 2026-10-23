@@ -55,6 +55,11 @@ jobs:
         run: bash bench/baseline/setup-target.sh ${{ matrix.repo }} ${{ matrix.tool }} mutation > "$RESULTS/logs/setup-target.log" 2>&1
       - name: Measure (output in a file)
         run: bash bench/baseline/run-mutation.sh ${{ matrix.repo }} ${{ matrix.tool }} ${{ matrix.shard }} ${{ matrix.shards }} "$RESULTS" > "$RESULTS/logs/run.log" 2>&1
+      # Approved by the user: quality-ts error reasons for public targets.
+      - if: always() && matrix.tool == 'quality-ts' && matrix.repo != 'quality-ts'
+        run: |
+          jq -r '.modules[]? | select(.status == "error") | "\(.package // ".") \(.id): \(.reason)"' "$RESULTS"/out/qts.json 2>/dev/null | cut -c1-2000 || true
+          tail -n 5 "$RESULTS"/logs/quality-ts-mutation.log 2>/dev/null | cut -c1-500 || true
       - if: always()
         run: |
           mkdir -p "$RESULTS"
