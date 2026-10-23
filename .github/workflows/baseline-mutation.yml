@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 env:
-  # A repo name runs only its jobs ("smoke" = zustand); empty runs the full plan.
-  PLAN: quality-ts
+  # [TOOL/]REPO runs only those jobs ("smoke" = zustand); empty runs the full plan.
+  PLAN: fallow/quality-ts
 
 jobs:
   plan:

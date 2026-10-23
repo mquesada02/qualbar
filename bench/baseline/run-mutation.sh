@@ -27,7 +27,8 @@ else
   "$FALLOW" mutation --plan --all --no-cache --format json > "$RESULTS/out/plan.json"
   python3 "$HERE/shard.py" "$RESULTS/out/plan.json" "$SHARD" "$SHARDS" > "$RESULTS/out/files.txt"
   labels+=(--label "planned_files=$(wc -l < "$RESULTS/out/files.txt" | tr -d ' ')")
-  cmd="xargs $FALLOW mutation --no-cache --allow-dirty --format json -o $RESULTS/out/fallow.json < $RESULTS/out/files.txt"
+  # The default 2 min setup timeout is shorter than one quality-ts test run.
+  cmd="xargs $FALLOW mutation --no-cache --allow-dirty --setup-timeout 20m --format json -o $RESULTS/out/fallow.json < $RESULTS/out/files.txt"
 fi
 python3 "$HERE/measure.py" --out "$RESULTS/results.jsonl" --log "$RESULTS/logs/$TOOL-mutation.log" --timeout 20400 "${labels[@]}" -- "$cmd"
 
