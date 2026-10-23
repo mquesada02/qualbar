@@ -12,8 +12,8 @@ permissions:
   contents: read
 
 env:
-  # "smoke" runs zustand only; empty runs the full plan.
-  PLAN: ""
+  # A repo name runs only its jobs ("smoke" = zustand); empty runs the full plan.
+  PLAN: quality-ts
 
 jobs:
   plan:
@@ -60,6 +60,11 @@ jobs:
         run: |
           jq -r '.modules[]? | select(.status == "error") | "\(.package // ".") \(.id): \(.reason)"' "$RESULTS"/out/qts.json 2>/dev/null | cut -c1-2000 || true
           tail -n 5 "$RESULTS"/logs/quality-ts-mutation.log 2>/dev/null | cut -c1-500 || true
+      # Approved by the user: one error line per tool for the quality-ts repo.
+      - if: always() && matrix.repo == 'quality-ts'
+        run: |
+          jq -r '.modules[]? | select(.status == "error") | "\(.package // ".") \(.id): \(.reason | split("\n")[0])"' "$RESULTS"/out/qts.json 2>/dev/null | cut -c1-300 || true
+          grep -ah '^{"error"' "$RESULTS"/logs/fallow-mutation.log 2>/dev/null | jq -r .message | head -n 1 | cut -c1-300 || true
       - if: always()
         run: |
           mkdir -p "$RESULTS"

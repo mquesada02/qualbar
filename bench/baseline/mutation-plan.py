@@ -8,7 +8,7 @@ quality-ts refuses date-fns (TypeScript 7, Vitest 5); fallow mutation is
 Vitest-only, so it skips ts-pattern (Jest), and fallow 3.35.0 cannot load
 zod's Vitest workspace (file-based projects, also from packages/zod).
 
-Usage: mutation-plan.py [smoke]
+Usage: mutation-plan.py [REPO]   (only the jobs of REPO; "smoke" means zustand)
 """
 
 import json
@@ -21,11 +21,11 @@ SHARDS = {
 
 
 def main():
-    smoke = sys.argv[1:] == ["smoke"]
+    only = {"smoke": "zustand"}.get(sys.argv[1], sys.argv[1]) if sys.argv[1:] else None
     include = []
     for tool, repos in SHARDS.items():
         for repo, shards in repos.items():
-            if smoke and repo != "zustand":
+            if only and repo != only:
                 continue
             for shard in range(1, shards + 1):
                 include.append({"os": "ubuntu-24.04", "tool": tool, "repo": repo, "shard": shard, "shards": shards})
