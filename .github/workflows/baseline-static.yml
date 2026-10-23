@@ -2,14 +2,20 @@
 # Ticket: "Task: baseline timings of quality-ts and fallow" (qualbar#23).
 #
 # quality-ts is private and this repo is public, so its logs and artifacts are
-# public. Steps that touch quality-ts code send their output to /dev/null, and
-# only numbers (results.jsonl, machine.txt) are uploaded.
+# public. Step output goes to files, not to the job log. Jobs that never touch
+# quality-ts code (fallow on a public repo) upload their logs; every other job
+# uploads only numbers (results.jsonl, machine.txt).
 name: baseline-static
 
 on:
   push:
     branches: [research/baseline-timings]
-    paths: [bench/baseline/**, .github/workflows/baseline-static.yml]
+    paths:
+      - bench/baseline/corpus.json
+      - bench/baseline/measure.py
+      - bench/baseline/setup-*.sh
+      - bench/baseline/run-static.sh
+      - .github/workflows/baseline-static.yml
 
 permissions:
   contents: read
@@ -41,12 +47,15 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install psutil==7.0.0
-      - name: Set up tool (output hidden)
-        run: bash bench/baseline/setup-tools.sh ${{ matrix.tool }} > /dev/null 2>&1
-      - name: Set up target (output hidden)
-        run: bash bench/baseline/setup-target.sh ${{ matrix.repo }} ${{ matrix.tool }} static > /dev/null 2>&1
-      - name: Measure (output hidden)
-        run: bash bench/baseline/run-static.sh ${{ matrix.repo }} ${{ matrix.tool }} "$RESULTS" > /dev/null 2>&1
+      - name: Set up tool (output in a file)
+        run: mkdir -p "$RESULTS/logs" && bash bench/baseline/setup-tools.sh ${{ matrix.tool }} > "$RESULTS/logs/setup-tools.log" 2>&1
+      - name: Set up target (output in a file)
+        run: bash bench/baseline/setup-target.sh ${{ matrix.repo }} ${{ matrix.tool }} static > "$RESULTS/logs/setup-target.log" 2>&1
+      - name: Measure (output in a file)
+        run: bash bench/baseline/run-static.sh ${{ matrix.repo }} ${{ matrix.tool }} "$RESULTS" > "$RESULTS/logs/run.log" 2>&1
+      # The open points of quality-ts init name only files of the public target.
+      - if: failure() && matrix.tool == 'quality-ts' && matrix.repo != 'quality-ts'
+        run: grep -h 'pass --' "$RESULTS/logs/setup-target.log" || true
       - if: always()
         run: |
           mkdir -p "$RESULTS"
@@ -60,3 +69,10 @@ jobs:
             results/results.jsonl
             results/machine.txt
           if-no-files-found: warn
+      - if: always() && matrix.tool == 'fallow' && matrix.repo != 'quality-ts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ matrix.os }}-${{ matrix.repo }}-${{ matrix.tool }}
+          path: |
+            results/logs
+            results/out
