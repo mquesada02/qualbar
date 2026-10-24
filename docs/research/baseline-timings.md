@@ -318,7 +318,7 @@ Per-shard wall time of fallow on the quality-ts repo (Linux), to show the uneven
 
 | Gap | Cause | Effect on the numbers |
 |---|---|---|
-| quality-ts mutation on the quality-ts repo | Stryker stops: "There were failed tests in the initial test run". The reason has no test names, so the bench cannot remove them. | No measured number. Estimate from [Spike: Stryker mutation timing](https://github.com/mquesada02/qualbar/issues/17): about 41 h at concurrency 1 on 2 cores. |
+| quality-ts mutation on the quality-ts repo | Stryker stops: "There were failed tests in the initial test run". The reason has no test names, so the bench cannot remove them. | No measured number. Estimate from [Task: Stryker on TypeScript 7 spike](https://github.com/mquesada02/qualbar/issues/17): about 41 h at concurrency 1 on 2 cores. |
 | quality-ts mutation on zod | The Stryker sandbox fails: `EISDIR` when it copies `.codex/skills`, and "Projects definition references a non-existing file ... vitest.compile.config.ts". | No number. |
 | quality-ts mutation on date-fns | quality-ts refuses TypeScript 7 and Vitest 5. | Not run. |
 | fallow mutation on ts-pattern and zod | fallow mutation is Vitest-only (ts-pattern uses Jest). fallow 3.35.0 cannot load zod's Vitest file-based projects. | Not run. |
